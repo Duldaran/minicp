@@ -31,6 +31,8 @@ public class TwinMod extends AbstractConstraint {
         this.cofX = cofX;
         this.cofY = cofY;
         this.result = result;
+        if (result < 0)
+            throw new IllegalArgumentException("result must be non-negative");
         if (mod <= 0)
             throw new IllegalArgumentException("mod must be positive");
         if (cofX == 0 && cofY == 0)
@@ -54,15 +56,18 @@ public class TwinMod extends AbstractConstraint {
             if(cofY == 0) {
                 if(rhs != 0)
                     throw new InconsistencyException();
+                this.setActive(false);
+                return;
             } 
             for(int val = y.min(); val <= y.max(); val++) {
                 if(y.contains(val)) {
-                    if((cofY * val) % mod != rhs) {
+                    if((((cofY * val) % mod) + mod) % mod != rhs) {
                         y.remove(val);
                     }
                 }
             }
             this.setActive(false);
+            return;
         }
         else if(y.isFixed()) {
             int vy = y.min();
@@ -70,10 +75,12 @@ public class TwinMod extends AbstractConstraint {
             if(cofX == 0) {
                 if(rhs != 0)
                     throw new InconsistencyException();
+                this.setActive(false);
+                return;
             } 
             for(int val = x.min(); val <= x.max(); val++) {
                 if(x.contains(val)) {
-                    if((cofX * val) % mod != rhs) {
+                    if((((cofX * val) % mod) + mod) % mod != rhs) {
                         x.remove(val);
                     }
                 }
@@ -88,7 +95,7 @@ public class TwinMod extends AbstractConstraint {
             if(x.contains(vx)) {
                 for(int vy = y.min(); vy <= y.max(); vy++) {
                     if(y.contains(vy)) {
-                        if((cofX * vx + cofY * vy) % mod != result) {
+                        if(((cofX * vx + cofY * vy) % mod + mod) % mod != result) {
                             pairs.add(new Integer[]{vx, vy});
                         }
                     }
