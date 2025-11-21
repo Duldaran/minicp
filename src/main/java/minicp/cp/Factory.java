@@ -527,6 +527,11 @@ public final class Factory {
         return new LessOrEqual(y, x);
     }
 
+
+    public static Constraint tp2(IntVar x, IntVar[] y, IntVar z) {
+        return new tp2(x, y, z);
+    }
+
     /**
      * Returns a variable representing
      * the value in an array at the position

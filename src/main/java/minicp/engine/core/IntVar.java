@@ -45,6 +45,30 @@ public interface IntVar {
     void whenBoundChange(Procedure f);
 
     /**
+     * Asks that the closure is called whenever
+     * the max setValue of the domain of this variable changes
+     *
+     * @param f the closure
+     */
+    void whenUpperBoundChange(Procedure f);
+
+    /**
+     * Asks that the closure is called whenever
+     * the min setValue of the domain of this variable changes
+     *
+     * @param f the closure
+     */
+    void whenLowerBoundChange(Procedure f);
+
+    /**
+     * Asks that the closure is called whenever the domain
+     * of this variable remove the value of zero from its domain
+     *
+     * @param f the closure
+     */
+    void whenExcludeZero(Procedure f);
+
+    /**
      * Asks that the closure is called whenever the domain change
      * of this variable changes
      *
@@ -82,6 +106,37 @@ public interface IntVar {
      *          method should be called on bound change events of this variable.
      */
     void propagateOnBoundChange(Constraint c);
+
+    /**
+     * Asks that {@link Constraint#propagate()} is called whenever the
+     * maximum of the domain
+     * of this variable is changed.
+     * We say that a <i>bound change</i> event occurs in this case.
+     *
+     * @param c the constraint for which the {@link Constraint#propagate()}
+     *          method should be called on bound change events of this variable.
+     */
+    void propagateOnUpperBoundChange(Constraint c);
+
+    /**
+     * Asks that {@link Constraint#propagate()} is called whenever the
+     * minimum of the domain
+     * of this variable is changed.
+     * We say that a <i>bound change</i> event occurs in this case.
+     *
+     * @param c the constraint for which the {@link Constraint#propagate()}
+     *          method should be called on bound change events of this variable.
+     */
+    void propagateOnLowerBoundChange(Constraint c);
+
+    /**
+     * Asks that {@link Constraint#propagate()} is called whenever the
+     * value zero is removed from the domain of this variable.
+     *
+     * @param c the constraint for which the {@link Constraint#propagate()}
+     *          method should be called when zero is removed from the domain of this variable.
+     */
+    void propagateOnExcludeZero(Constraint c);
 
 
     /**

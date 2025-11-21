@@ -72,6 +72,7 @@ public class SparseSetDomain implements IntDomain {
             l.change();
             if (maxChanged) l.changeMax();
             if (minChanged) l.changeMin();
+            if (v==0) l.excludeZero();
             if (domain.size() == 1) l.fix();
         }
     }
@@ -80,6 +81,7 @@ public class SparseSetDomain implements IntDomain {
     public void removeAllBut(int v, DomainListener l) {
         if (domain.contains(v)) {
             if (domain.size() != 1) {
+                boolean zeroRemoved = domain.contains(0) && v != 0;
                 boolean maxChanged = max() != v;
                 boolean minChanged = min() != v;
                 domain.removeAllBut(v);
@@ -89,6 +91,7 @@ public class SparseSetDomain implements IntDomain {
                 l.change();
                 if (maxChanged) l.changeMax();
                 if (minChanged) l.changeMin();
+                if(zeroRemoved) l.excludeZero();
             }
         } else {
             domain.removeAll();
@@ -99,6 +102,7 @@ public class SparseSetDomain implements IntDomain {
     @Override
     public void removeBelow(int value, DomainListener l) {
         if (domain.min() < value) {
+            boolean zeroRemoved = domain.contains(0) && value > 0;
             domain.removeBelow(value);
             switch (domain.size()) {
                 case 0:
@@ -111,12 +115,14 @@ public class SparseSetDomain implements IntDomain {
                     l.change();
                     break;
             }
+            if (zeroRemoved) l.excludeZero();
         }
     }
 
     @Override
     public void removeAbove(int value, DomainListener l) {
         if (domain.max() > value) {
+            boolean zeroRemoved = domain.contains(0) && value < 0;
             domain.removeAbove(value);
             switch (domain.size()) {
                 case 0:
@@ -129,6 +135,7 @@ public class SparseSetDomain implements IntDomain {
                     l.change();
                     break;
             }
+            if (zeroRemoved) l.excludeZero();
         }
     }
 

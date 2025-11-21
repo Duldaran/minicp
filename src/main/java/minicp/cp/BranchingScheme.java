@@ -15,6 +15,7 @@
 
 package minicp.cp;
 
+import minicp.engine.core.Constraint;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.LimitedDiscrepancyBranching;
@@ -30,8 +31,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import static minicp.cp.Factory.equal;
-import static minicp.cp.Factory.notEqual;
+import static minicp.cp.Factory.*;
 
 /**
  * Factory for search procedures.
@@ -138,6 +138,37 @@ public final class BranchingScheme {
             }
         };
     }
+
+
+
+    /**
+     * Domain-Range splitting strategy.
+     * It selects the biggest variable with a domain larger than one.
+     * Then it creates two branches. The left branch
+     * restricting the variable to values smaller or equal to the
+     * average of its minimum and maximum values.
+     * The right branch restricting the variable to values
+     * larger than this average.
+     * @param x the variable on which the domain-range splitting strategy is applied.
+     * @return a domain-range splitting branching strategy
+     * @see Factory#makeDfs(Solver, Supplier)
+     */
+    public static Supplier<Procedure[]> splitDomRange(IntVar... x) {
+        return () -> {
+            IntVar xs = selectMin(x,
+                    xi -> xi.size() > 1,
+                    xi -> xi.min()-xi.max());
+            if (xs == null)
+                return EMPTY;
+            else{
+                int v = Math.floorDiv(xs.min() + xs.max(), 2);
+                return branch(() -> {xs.getSolver().post(lessOrEqual(xs, v));},
+                        () -> {xs.getSolver().post(largerOrEqual(xs, v+1));});
+            }
+        };
+    }
+
+
 
     /**
      * Sequential Search combinator that linearly

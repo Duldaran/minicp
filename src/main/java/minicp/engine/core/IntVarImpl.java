@@ -34,6 +34,9 @@ public class IntVarImpl implements IntVar {
     private final StateStack<Constraint> onDomain;
     private final StateStack<Constraint> onFix;
     private final StateStack<Constraint> onBound;
+    private final StateStack<Constraint> onUpperBound;
+    private final StateStack<Constraint> onLowerBound;
+    private final StateStack<Constraint> onExcludeZero;
 
     private final DomainListener domListener = new DomainListener() {
         @Override
@@ -54,11 +57,18 @@ public class IntVarImpl implements IntVar {
         @Override
         public void changeMin() {
             scheduleAll(onBound);
+            scheduleAll(onLowerBound);
         }
 
         @Override
         public void changeMax() {
             scheduleAll(onBound);
+            scheduleAll(onUpperBound);
+        }
+
+        @Override
+        public void excludeZero() {
+            scheduleAll(onExcludeZero);
         }
     };
 
@@ -89,6 +99,9 @@ public class IntVarImpl implements IntVar {
         onDomain = new StateStack<>(cp.getStateManager());
         onFix = new StateStack<>(cp.getStateManager());
         onBound = new StateStack<>(cp.getStateManager());
+        onUpperBound = new StateStack<>(cp.getStateManager());
+        onLowerBound = new StateStack<>(cp.getStateManager());
+        onExcludeZero = new StateStack<>(cp.getStateManager());
     }
 
 
@@ -133,6 +146,21 @@ public class IntVarImpl implements IntVar {
         onDomain.push(constraintClosure(f));
     }
 
+    @Override
+    public void whenUpperBoundChange(Procedure f) {
+        onUpperBound.push(constraintClosure(f));
+    }
+
+    @Override
+    public void whenLowerBoundChange(Procedure f) {
+        onLowerBound.push(constraintClosure(f));
+    }
+
+    @Override
+    public void whenExcludeZero(Procedure f) {
+        onExcludeZero.push(constraintClosure(f));
+    }
+
     private Constraint constraintClosure(Procedure f) {
         Constraint c = new ConstraintClosure(cp, f);
         getSolver().post(c, false);
@@ -152,6 +180,21 @@ public class IntVarImpl implements IntVar {
     @Override
     public void propagateOnBoundChange(Constraint c) {
         onBound.push(c);
+    }
+
+    @Override
+    public void propagateOnUpperBoundChange(Constraint c) {
+        onUpperBound.push(c);
+    }
+
+    @Override
+    public void propagateOnLowerBoundChange(Constraint c) {
+        onLowerBound.push(c);
+    }
+
+    @Override
+    public void propagateOnExcludeZero(Constraint c) {
+        onExcludeZero.push(c);
     }
 
 
