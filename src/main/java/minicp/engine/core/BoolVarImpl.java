@@ -72,6 +72,21 @@ public class BoolVarImpl implements BoolVar {
     }
 
     @Override
+    public void whenUpperBoundChange(Procedure f) {
+        binaryVar.whenUpperBoundChange(f);
+    }
+
+    @Override
+    public void whenLowerBoundChange(Procedure f) {
+        binaryVar.whenLowerBoundChange(f);
+    }
+
+    @Override
+    public void whenExcludeZero(Procedure f) {
+        binaryVar.whenExcludeZero(f);
+    }
+
+    @Override
     public void propagateOnDomainChange(Constraint c) {
         binaryVar.propagateOnDomainChange(c);
     }
@@ -84,6 +99,21 @@ public class BoolVarImpl implements BoolVar {
     @Override
     public void propagateOnBoundChange(Constraint c) {
         binaryVar.propagateOnBoundChange(c);
+    }
+
+    @Override
+    public void propagateOnUpperBoundChange(Constraint c) {
+        binaryVar.propagateOnUpperBoundChange(c);
+    }
+
+    @Override
+    public void propagateOnLowerBoundChange(Constraint c) {
+        binaryVar.propagateOnLowerBoundChange(c);
+    }
+
+    @Override
+    public void propagateOnExcludeZero(Constraint c) {
+        binaryVar.propagateOnExcludeZero(c);
     }
 
     @Override

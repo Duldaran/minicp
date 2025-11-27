@@ -58,6 +58,21 @@ public class IntVarViewOffset implements IntVar {
     }
 
     @Override
+    public void whenUpperBoundChange(Procedure f) {
+        x.whenUpperBoundChange(f);
+    }
+
+    @Override
+    public void whenLowerBoundChange(Procedure f) {
+        x.whenLowerBoundChange(f);
+    }
+
+    @Override
+    public void whenExcludeZero(Procedure f) {
+        x.whenExcludeZero(f);
+    }
+
+    @Override
     public void propagateOnDomainChange(Constraint c) {
         x.propagateOnDomainChange(c);
     }
@@ -70,6 +85,21 @@ public class IntVarViewOffset implements IntVar {
     @Override
     public void propagateOnBoundChange(Constraint c) {
         x.propagateOnBoundChange(c);
+    }
+
+    @Override
+    public void propagateOnUpperBoundChange(Constraint c) {
+        x.propagateOnUpperBoundChange(c);
+    }
+
+    @Override
+    public void propagateOnLowerBoundChange(Constraint c) {
+        x.propagateOnLowerBoundChange(c);
+    }
+
+    @Override
+    public void propagateOnExcludeZero(Constraint c) {
+        x.propagateOnExcludeZero(c);
     }
 
     @Override

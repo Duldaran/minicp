@@ -656,4 +656,31 @@ public final class Factory {
     public static Constraint allDifferentDC(IntVar[] x) {
         return new AllDifferentDC(x);
     }
+
+    /**
+     * Returns an allDifferent constraint that enforces
+     * domain consistency.
+     *
+     * @param x an array of variables
+     * @return a constraint so that {@code x[i] != x[j] for all i < j}
+     */
+    public static Constraint allDifferentVar(IntVar x, IntVar y) {
+        return new AllDifferentVar(x, y);
+    }
+
+    public static Constraint absoluteAboveEqual(IntVar x, int k) {
+        return new AbsoluteAboveEqual(x, k);
+    }
+
+    public static Constraint absoluteBelowEqual(IntVar x, int k) {
+        return new AbsoluteBelowEqual(x, k);
+    }
+
+    public static AbstractConstraint difference(IntVar x, IntVar y, IntVar z) {
+        return new Difference(x, y, z);
+    }
+
+    public static Constraint absoluteAboveEqualVarSub(IntVar x, IntVar y, int k) {
+        return new AbsoluteAboveEqualVarSub(x, y, k);
+    }
 }
