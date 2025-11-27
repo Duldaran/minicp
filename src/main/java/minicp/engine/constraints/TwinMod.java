@@ -1,11 +1,19 @@
-package minicp.engine.constraints;
 
-import java.util.ArrayList;
+
+package minicp.engine.constraints;
 
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
+import minicp.engine.core.Solver;
 import minicp.util.exception.InconsistencyException;
 
+import static minicp.cp.Factory.*;
+
+import java.util.ArrayList;
+
+/**
+ * TwinMod
+ */
 public class TwinMod extends AbstractConstraint {
 
     private final IntVar x;
@@ -23,6 +31,8 @@ public class TwinMod extends AbstractConstraint {
         this.cofX = cofX;
         this.cofY = cofY;
         this.result = result;
+        if (result < 0)
+            throw new IllegalArgumentException("result must be non-negative");
         if (mod <= 0)
             throw new IllegalArgumentException("mod must be positive");
         if (cofX == 0 && cofY == 0)
@@ -40,35 +50,42 @@ public class TwinMod extends AbstractConstraint {
 
     @Override
     public void propagate() {
-
-        // Case 1: x is fixed -> prune y
-        if (x.isFixed()) {
+        if(x.isFixed()) {
             int vx = x.min();
             int rhs = (result - (cofX * vx) % mod + mod) % mod;
-
-            for (int vy = y.min(); vy <= y.max(); vy++) {
-                if (y.contains(vy)) {
-                    if ((cofY * vy) % mod != rhs) {
-                        y.remove(vy);
+            if(cofY == 0) {
+                if(rhs != 0)
+                    throw new InconsistencyException();
+                this.setActive(false);
+                return;
+            } 
+            for(int val = y.min(); val <= y.max(); val++) {
+                if(y.contains(val)) {
+                    if((((cofY * val) % mod) + mod) % mod != rhs) {
+                        y.remove(val);
                     }
                 }
             }
-            setActive(false);
+            this.setActive(false);
+            return;
         }
-
-        // Case 2: y is fixed -> prune x
-        else if (y.isFixed()) {
+        else if(y.isFixed()) {
             int vy = y.min();
             int rhs = (result - (cofY * vy) % mod + mod) % mod;
-
-            for (int vx = x.min(); vx <= x.max(); vx++) {
-                if (x.contains(vx)) {
-                    if ((cofX * vx) % mod != rhs) {
-                        x.remove(vx);
+            if(cofX == 0) {
+                if(rhs != 0)
+                    throw new InconsistencyException();
+                this.setActive(false);
+                return;
+            } 
+            for(int val = x.min(); val <= x.max(); val++) {
+                if(x.contains(val)) {
+                    if((((cofX * val) % mod) + mod) % mod != rhs) {
+                        x.remove(val);
                     }
                 }
             }
-            setActive(false);
+            this.setActive(false);
         }
     }
 
@@ -78,7 +95,7 @@ public class TwinMod extends AbstractConstraint {
             if(x.contains(vx)) {
                 for(int vy = y.min(); vy <= y.max(); vy++) {
                     if(y.contains(vy)) {
-                        if((cofX * vx + cofY * vy) % mod != result) {
+                        if(((cofX * vx + cofY * vy) % mod + mod) % mod != result) {
                             pairs.add(new Integer[]{vx, vy});
                         }
                     }
@@ -86,5 +103,5 @@ public class TwinMod extends AbstractConstraint {
             }
         }
         return pairs;
-    } 
+    }
 }
