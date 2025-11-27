@@ -1,30 +1,29 @@
 package minicp.examples;
 
 import minicp.cp.Factory;
+import minicp.engine.constraints.TwinMod;
+import minicp.engine.constraints.AbsoluteAboveEqualVarSub;
+import minicp.engine.constraints.AllDifferentVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
-import minicp.search.DFSearch;
 
-import static minicp.cp.BranchingScheme.*;
+import java.util.ArrayList;
+
 import static minicp.cp.Factory.*;
-
 
 public class SweepConstraintTest {
     public void testForbiddenRegion() {
         Solver cp = Factory.makeSolver(false);
 
-        IntVar x = makeIntVar(cp, 0, 4);
-        IntVar y = makeIntVar(cp, 0, 4);
+        IntVar x = makeIntVar(cp, 0, 10);
+        IntVar y = makeIntVar(cp, 0, 10);
 
-        IntVar D = makeIntVar(cp, -4, 4);
-        cp.post(difference(x, y, D));
+        // Create and post the concrete TwinMod constraint so we can call getForbiddenPairs()
+        //TwinMod c = new TwinMod(x, y, 2, 1, 1, 0);
+        //AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, 4);
+        AllDifferentVar c = new AllDifferentVar(x, y);
+        cp.post(c);
 
-        // Post your constraint here
-        // cp.post(allDifferentVar(x, y));
-        //cp.post(absoluteAboveEqual(D, 2));
-        // cp.post(absoluteBelowEqual(D, 2));
-        cp.post(absoluteAboveEqualVarSub(x, y, 3));
-        
         // Use current domains to size the grid
         int minX = x.min();
         int maxX = x.max();
@@ -39,18 +38,25 @@ public class SweepConstraintTest {
         // Grid to record which (x,y) pairs are allowed by the constraint
         final boolean[][] allowed = new boolean[n][n];
 
-        // Simple search over (x, y)
-        DFSearch search = makeDfs(cp, firstFail(x, y));
+        // Start with everything allowed
+        for (int xv = min; xv <= max; xv++) {
+            for (int yv = min; yv <= max; yv++) {
+                allowed[xv - min][yv - min] = true;
+            }
+        }
 
-        search.onSolution(() -> {
-            int xv = x.min();
-            int yv = y.min();
-            allowed[xv - min][yv - min] = true;
-        });
-
-        search.solve();
+        // Get forbidden pairs directly from the constraint
+        ArrayList<Integer[]> forbiddenPairs = c.getForbiddenPairs();
+        for (Integer[] pair : forbiddenPairs) {
+            int xv = pair[0];
+            int yv = pair[1];
+            if (xv >= min && xv <= max && yv >= min && yv <= max) {
+                allowed[xv - min][yv - min] = false;
+            }
+        }
 
         // Print header
+        System.out.println("   ");
         System.out.println("Allowed region for constraint(x, y)");
         System.out.println("O = allowed (solution), X = forbidden (no solution)");
         System.out.println();
@@ -73,11 +79,12 @@ public class SweepConstraintTest {
         for (int xv = min; xv <= max; xv++) {
             System.out.print("x=" + xv + " | ");
             for (int yv = min; yv <= max; yv++) {
-                char c = allowed[xv - min][yv - min] ? 'O' : 'X';
-                System.out.print(c + " ");
+                char cPlot = allowed[xv - min][yv - min] ? 'O' : 'X';
+                System.out.print(cPlot + " ");
             }
             System.out.println();
         }
+        System.out.print("   ");
     }
 
     public static void main(String[] args) {

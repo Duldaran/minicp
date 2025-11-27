@@ -15,6 +15,8 @@
 
 package minicp.engine.constraints;
 
+import java.util.ArrayList;
+
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
@@ -36,5 +38,22 @@ public class AllDifferentVar extends AbstractConstraint {
         cp_x.post(new NotEqual(x, y), false);
         Solver cp_y = y.getSolver();
         cp_y.post(new NotEqual(x, y), false);
+    }
+
+    
+    public ArrayList<Integer[]> getForbiddenPairs() {
+        ArrayList<Integer[]> pairs = new ArrayList<>();
+        for(int vx = x.min(); vx <= x.max(); vx++) {
+            if(x.contains(vx)) {
+                for(int vy = y.min(); vy <= y.max(); vy++) {
+                    if(y.contains(vy)) {
+                        if(vx == vy) {
+                            pairs.add(new Integer[]{vx, vy});
+                        }
+                    }
+                }
+            }
+        }
+        return pairs;
     }
 }

@@ -668,19 +668,15 @@ public final class Factory {
         return new AllDifferentVar(x, y);
     }
 
-    public static Constraint absoluteAboveEqual(IntVar x, int k) {
-        return new AbsoluteAboveEqual(x, k);
-    }
-
-    public static Constraint absoluteBelowEqual(IntVar x, int k) {
-        return new AbsoluteBelowEqual(x, k);
-    }
-
-    public static AbstractConstraint difference(IntVar x, IntVar y, IntVar z) {
-        return new Difference(x, y, z);
-    }
-
     public static Constraint absoluteAboveEqualVarSub(IntVar x, IntVar y, int k) {
         return new AbsoluteAboveEqualVarSub(x, y, k);
+    }
+
+    public static Constraint twinLessOrEqual(IntVar x, IntVar y, int cofX, int cofY, int result) {
+        return new TwinLessOrEqual(x, y, cofX, cofY, result);
+    }
+
+    public static Constraint twinMod(IntVar x, IntVar y, int mod, int cofX, int cofY, int result) {
+        return new TwinMod(x, y, mod, cofX, cofY, result);
     }
 }
