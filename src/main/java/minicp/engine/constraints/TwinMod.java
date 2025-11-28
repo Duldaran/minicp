@@ -22,6 +22,7 @@ public class TwinMod extends AbstractConstraint {
     private final int cofX;
     private final int cofY;
     private final int result;
+    private int nbPropagate = 0;
 
     public TwinMod(IntVar x, IntVar y, int mod, int cofX, int cofY, int result) {
         super(x.getSolver());
@@ -50,6 +51,7 @@ public class TwinMod extends AbstractConstraint {
 
     @Override
     public void propagate() {
+        nbPropagate++;
         if(x.isFixed()) {
             int vx = x.min();
             int rhs = (result - (cofX * vx) % mod + mod) % mod;
@@ -104,5 +106,8 @@ public class TwinMod extends AbstractConstraint {
             }
         }
         return pairs;
+    }
+    public int getNbPropagate() {
+        return nbPropagate;
     }
 }

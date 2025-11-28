@@ -23,8 +23,8 @@ public class SweepConstraintTest {
 
         // Create and post the concrete TwinMod constraint so we can call getForbiddenPairs()
         //TwinMod c = new TwinMod(x, y, 2, 1, 1, 0);
-        AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, 4);
-        //AllDifferentVar c = new AllDifferentVar(x, y);
+        //AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, 4);
+        AllDifferentVar c = new AllDifferentVar(x, y);
         cp.post(c);
 
         // Use current domains to size the grid

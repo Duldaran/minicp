@@ -8,6 +8,7 @@ import minicp.engine.constraints.TwinLessOrEqual;
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
+import minicp.search.DFSListener;
 import minicp.search.DFSearch;
 import minicp.search.SearchStatistics;
 
@@ -23,7 +24,8 @@ public class SweepConstraintExample1 {
 
         
         final boolean printForbidden = true;
-        final boolean filterSweepLine = true;
+        final boolean filterSweepLine = false;
+        final boolean propagate = true;
 
         IntVar x = makeIntVar(cp, 0, 4);
         IntVar y = makeIntVar(cp, 0, 4);
@@ -34,7 +36,7 @@ public class SweepConstraintExample1 {
         int minY = y.min();
         int maxY = y.max();
 
-        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y, 3);
+        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y, 1,1,3);
         AllDifferentVar A = new AllDifferentVar(x, y);
         TwinLessOrEqual C = new TwinLessOrEqual(x, y, 1, 2, 6);
         TwinMod E = new TwinMod(x, y, 2, 1, 1, 0);
@@ -42,7 +44,7 @@ public class SweepConstraintExample1 {
         ArrayList<AbstractConstraint> constraints = new ArrayList<>(Arrays.asList( A, B, C, E));
 
         // Filter the domains by propagating all constraints
-        for (AbstractConstraint c : constraints) {
+        for (AbstractConstraint c : constraints) if (propagate) {
             cp.post(c);
         }
 
@@ -237,11 +239,6 @@ public class SweepConstraintExample1 {
         // Simple first-fail branching on (x, y)
         DFSearch dfs = makeDfs(cp, firstFail(new IntVar[]{x, y}));
 
-        // Optional: print each solution
-        dfs.onSolution(() -> {
-            System.out.println("Solution found: x=" + x.min() + ", y=" + y.min());
-        });
-
         // Run the full search and get statistics
         SearchStatistics stats = dfs.solve();
 
@@ -252,6 +249,13 @@ public class SweepConstraintExample1 {
         System.out.println("  #nodes     = " + stats.numberOfNodes());
         System.out.println("  #failures  = " + stats.numberOfFailures());
         System.out.println("  raw stats  = " + stats);
+        
+        System.out.println();
+        System.out.println("Nb appels à propagate() :");
+        System.out.println("  AllDifferentVar : " + A.getNbPropagate());
+        System.out.println("  AbsoluteAboveEqualVarSub : " + B.getNbPropagate());
+        System.out.println("  TwinLessOrEqual : " + C.getNbPropagate());
+        System.out.println("  TwinMod : " + E.getNbPropagate());
     }
 
     public static void main(String[] args) {

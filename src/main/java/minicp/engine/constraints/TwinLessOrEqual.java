@@ -20,6 +20,8 @@ public class TwinLessOrEqual extends AbstractConstraint {
     private final int cofY;
     private final int result;
 
+    private int nbPropagate = 0;
+
     public TwinLessOrEqual(IntVar x, IntVar y, int cofX, int cofY, int result) {
         super(x.getSolver());
         this.x = x;
@@ -40,6 +42,7 @@ public class TwinLessOrEqual extends AbstractConstraint {
 
     @Override
     public void propagate() {
+        nbPropagate++;
         if (cofY > 0 && cofX > 0) {
             y.removeAbove(Math.floorDiv(result - cofX * x.min(), cofY));
             x.removeAbove(Math.floorDiv(result - cofY * y.min(), cofX));
@@ -71,5 +74,8 @@ public class TwinLessOrEqual extends AbstractConstraint {
             }
         }
         return pairs;
+    }
+    public int getNbPropagate() {
+        return nbPropagate;
     }
 }
