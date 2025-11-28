@@ -2,6 +2,7 @@ package minicp.examples;
 
 import minicp.cp.Factory;
 import minicp.engine.constraints.TwinMod;
+import minicp.engine.constraints.TwinMoreOrEqual;
 import minicp.engine.constraints.AbsoluteAboveEqualVarSub;
 import minicp.engine.constraints.AllDifferentVar;
 import minicp.engine.constraints.TwinLessOrEqual;
@@ -17,16 +18,15 @@ import java.util.Arrays;
 import static minicp.cp.Factory.*;
 import static minicp.cp.BranchingScheme.firstFail;
 
-public class SweepConstraintExample1 {
-    public void testForbiddenRegion() {
-        Solver cp = Factory.makeSolver(false);
-
+public class SweepConstraintExample7 {
+    public void main() {
+        Solver cp = Factory.makeSolver();
         
-        final boolean printForbidden = true;
-        final boolean filterSweepLine = true;
+        final boolean printForbidden = false;
+        final boolean filterSweepLine = false;
 
-        IntVar x = makeIntVar(cp, 0, 4);
-        IntVar y = makeIntVar(cp, 0, 4);
+        IntVar x = makeIntVar(cp, 0, 200);
+        IntVar y = makeIntVar(cp, 0, 200);
 
         // Use initial domains to size the grid
         int minX = x.min();
@@ -34,14 +34,14 @@ public class SweepConstraintExample1 {
         int minY = y.min();
         int maxY = y.max();
 
-        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y, 3);
-        AllDifferentVar A = new AllDifferentVar(x, y);
-        TwinLessOrEqual C = new TwinLessOrEqual(x, y, 1, 2, 6);
-        TwinMod E = new TwinMod(x, y, 2, 1, 1, 0);
+        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y, 50);
+        TwinLessOrEqual C = new TwinLessOrEqual(x, y, 1, 1, 200);
+        TwinMoreOrEqual D = new TwinMoreOrEqual(x, y, -1, 2, -1);
+        TwinMoreOrEqual D2 = new TwinMoreOrEqual(x, y, 2, -1, -1);
+        TwinMoreOrEqual D3 = new TwinMoreOrEqual(x, y, 3, 4, 500);
+        TwinMod E = new TwinMod(x, y, 3, 1, 2, 2);
 
-        ArrayList<AbstractConstraint> constraints = new ArrayList<>(Arrays.asList( A, B, C, E));
-
-        // Filter the domains by propagating all constraints
+        ArrayList<AbstractConstraint> constraints = new ArrayList<>(Arrays.asList( B, C, E, D3, D2, D));
         for (AbstractConstraint c : constraints) {
             cp.post(c);
         }
@@ -176,37 +176,39 @@ public class SweepConstraintExample1 {
             }
         }
 
-        // Print header
-        System.out.println("   ");
-        System.out.println("Allowed region for constraint(x, y)");
-        System.out.println("O = allowed (solution), X = forbidden (no solution)");
-        System.out.println();
+        if(printForbidden) {
+            // Print header
+            System.out.println("   ");
+            System.out.println("Allowed region for sweep line (x, y)");
+            System.out.println("O = allowed (solution), X = forbidden (no solution)");
+            System.out.println();
 
-        // y-axis labels
-        System.out.print("    y=");
-        for (int yv = min; yv <= max; yv++) {
-            System.out.print(" " + yv);
-        }
-        System.out.println();
-
-        // separator line
-        System.out.print("   ");
-        for (int i = 0; i < 2 * n + 1; i++) {
-            System.out.print("-");
-        }
-        System.out.println();
-
-        // Print grid: rows = x, columns = y
-        for (int xv = min; xv <= max; xv++) {
-            System.out.print("x=" + xv + " | ");
+            // y-axis labels
+            System.out.print("    y=");
             for (int yv = min; yv <= max; yv++) {
-                char cPlot = allowed[xv - min][yv - min] ? 'O' : 'X';
-                System.out.print(cPlot + " ");
+                System.out.print(" " + yv);
             }
             System.out.println();
+
+            // separator line
+            System.out.print("   ");
+            for (int i = 0; i < 2 * n + 1; i++) {
+                System.out.print("-");
+            }
+            System.out.println();
+
+            // Print grid: rows = x, columns = y
+            for (int xv = min; xv <= max; xv++) {
+                System.out.print("x=" + xv + " | ");
+                for (int yv = min; yv <= max; yv++) {
+                    char cPlot = allowed[xv - min][yv - min] ? 'O' : 'X';
+                    System.out.print(cPlot + " ");
+                }
+                System.out.println();
+            }
+            System.out.print("   ");
+            System.out.println();
         }
-        System.out.print("   ");
-        System.out.println();
 
         filteredX.addAll(newFilteredX);
         filteredY.addAll(newFilteredY);
@@ -239,7 +241,7 @@ public class SweepConstraintExample1 {
 
         // Optional: print each solution
         dfs.onSolution(() -> {
-            System.out.println("Solution found: x=" + x.min() + ", y=" + y.min());
+            //System.out.println("Solution found: x=" + x.min() + ", y=" + y.min());
         });
 
         // Run the full search and get statistics
@@ -254,7 +256,5 @@ public class SweepConstraintExample1 {
         System.out.println("  raw stats  = " + stats);
     }
 
-    public static void main(String[] args) {
-        new SweepConstraintExample1().testForbiddenRegion();
-    }
+
 }

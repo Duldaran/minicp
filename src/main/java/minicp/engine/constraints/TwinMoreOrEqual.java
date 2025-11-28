@@ -33,31 +33,31 @@ public class TwinMoreOrEqual extends AbstractConstraint {
 
     @Override
     public void post() {
-        if(cofY >0)
-            y.propagateOnLowerBoundChange(this);
-        else
-            y.propagateOnUpperBoundChange(this);
-        if(cofX >0)
-            x.propagateOnLowerBoundChange(this);
-        else
-            x.propagateOnUpperBoundChange(this);
+
+        y.propagateOnBoundChange(this);
+        x.propagateOnBoundChange(this);
         propagate();
     }
 
     @Override
     public void propagate() {
-        if (cofY > 0) {
-            y.removeBelow(Math.ceilDiv(result - cofX * x.min(), cofY));
-        } 
-        else if (cofY < 0) {
-            y.removeAbove(Math.floorDiv(result - cofX * x.max(), cofY));
+        if(cofX > 0 && cofY > 0) {
+            x.removeBelow(Math.ceilDiv(result - cofY * y.max(), cofX));
+            y.removeBelow(Math.ceilDiv(result - cofX * x.max(), cofY));
         }
-        if (cofX > 0) {
+        else if(cofX < 0 && cofY < 0) {
+            x.removeAbove(Math.floorDiv(result - cofY * y.min(), cofX));
+            y.removeAbove(Math.floorDiv(result - cofX * x.min(), cofY));
+        } 
+        else if (cofX > 0 && cofY < 0) {
             x.removeBelow(Math.ceilDiv(result - cofY * y.min(), cofX));
+            y.removeAbove(Math.floorDiv(result - cofX * x.max(), cofY));
         } 
-        else if (cofX < 0) {
+        else if (cofX < 0 && cofY > 0) {
             x.removeAbove(Math.floorDiv(result - cofY * y.max(), cofX));
+            y.removeBelow(Math.ceilDiv(result - cofX * x.min(), cofY));
         }
+        
     }
 
     @Override
