@@ -40,7 +40,7 @@ public class AllDifferentVar extends AbstractConstraint {
         cp_y.post(new NotEqual(x, y), false);
     }
 
-    
+    @Override
     public ArrayList<Integer[]> getForbiddenPairs() {
         ArrayList<Integer[]> pairs = new ArrayList<>();
         for(int vx = x.min(); vx <= x.max(); vx++) {

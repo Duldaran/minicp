@@ -70,6 +70,7 @@ public class AbsoluteBelowEqualVarSub extends AbstractConstraint {
         }
     }
 
+    @Override
     public ArrayList<Integer[]> getForbiddenPairs() {
         ArrayList<Integer[]> pairs = new ArrayList<>();
 

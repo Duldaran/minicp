@@ -47,17 +47,18 @@ public class TwinLessOrEqual extends AbstractConstraint {
     @Override
     public void propagate() {
         if (cofY > 0) {
-            y.removeAbove(Math.floorDiv(result - cofX * x.max(), cofY));
+            y.removeAbove(Math.floorDiv(result - cofX * x.min(), cofY));
         } else if (cofY < 0) {
-            y.removeBelow(Math.ceilDiv(result - cofX * x.min(), cofY));
+            y.removeBelow(Math.ceilDiv(result - cofX * x.max(), cofY));
         }
         if (cofX > 0) {
-            x.removeAbove(Math.floorDiv(result - cofY * y.max(), cofX));
+            x.removeAbove(Math.floorDiv(result - cofY * y.min(), cofX));
         } else if (cofX < 0) {
-            x.removeBelow(Math.ceilDiv(result - cofY * y.min(), cofX));
+            x.removeBelow(Math.ceilDiv(result - cofY * y.max(), cofX));
         }
     }
 
+    @Override
     public ArrayList<Integer[]> getForbiddenPairs() {
         ArrayList<Integer[]> pairs = new ArrayList<>();
         for(int vx = x.min(); vx <= x.max(); vx++) {

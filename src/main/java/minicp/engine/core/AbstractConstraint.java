@@ -16,6 +16,8 @@
 package minicp.engine.core;
 
 
+import java.util.ArrayList;
+
 import minicp.state.State;
 
 
@@ -61,5 +63,9 @@ public abstract class AbstractConstraint implements Constraint {
 
     public boolean isActive() {
         return active.value();
+    }
+
+    public ArrayList<Integer[]> getForbiddenPairs() {
+        throw new UnsupportedOperationException("getForbiddenPairs not implemented for " + this.getClass().getSimpleName());
     }
 }

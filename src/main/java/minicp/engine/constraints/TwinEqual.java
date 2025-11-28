@@ -56,6 +56,7 @@ public class TwinEqual extends AbstractConstraint {
         }
     }
 
+    @Override
     public ArrayList<Integer[]> getForbiddenPairs() {
         ArrayList<Integer[]> pairs = new ArrayList<>();
         for(int vx = x.min(); vx <= x.max(); vx++) {
