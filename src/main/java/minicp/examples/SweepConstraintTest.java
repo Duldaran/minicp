@@ -4,6 +4,7 @@ import minicp.cp.Factory;
 import minicp.engine.constraints.TwinMod;
 import minicp.engine.constraints.AbsoluteAboveEqualVarSub;
 import minicp.engine.constraints.AllDifferentVar;
+import minicp.engine.constraints.TwinLessOrEqual;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
 import minicp.search.DFSearch;
@@ -20,11 +21,14 @@ public class SweepConstraintTest {
 
         IntVar x = makeIntVar(cp, 0, 10);
         IntVar y = makeIntVar(cp, 0, 10);
-
+        int cofX = 1;
+        int cofY = 0;
+        int result = 4;
         // Create and post the concrete TwinMod constraint so we can call getForbiddenPairs()
         //TwinMod c = new TwinMod(x, y, 2, 1, 1, 0);
-        AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, 4);
+        AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, cofX, cofY, result);
         //AllDifferentVar c = new AllDifferentVar(x, y);
+
         cp.post(c);
 
         // Use current domains to size the grid
@@ -96,11 +100,6 @@ public class SweepConstraintTest {
 
         // Simple first-fail branching on (x, y)
         DFSearch dfs = makeDfs(cp, firstFail(new IntVar[]{x, y}));
-
-        // Optional: print each solution
-        dfs.onSolution(() -> {
-            System.out.println("Solution found: x=" + x.min() + ", y=" + y.min());
-        });
 
         // Run the full search and get statistics
         SearchStatistics stats = dfs.solve();

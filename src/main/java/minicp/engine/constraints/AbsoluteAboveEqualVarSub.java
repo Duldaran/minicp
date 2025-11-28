@@ -15,7 +15,9 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
 
     private final IntVar x;
     private final IntVar y;
-    private final int k;
+    private final int cofX;
+    private final int cofY;
+    private final int result;
 
     /**
      * Creates the constraint |x - y| >= k
@@ -24,13 +26,17 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
      * @param y the second variable
      * @param k the strict lower bound on |x - y|
      */
-    public AbsoluteAboveEqualVarSub(IntVar x, IntVar y, int k) {
+    public AbsoluteAboveEqualVarSub(IntVar x, IntVar y, int cofX, int cofY, int result) {
         super(x.getSolver());
         this.x = x;
         this.y = y;
-        this.k = k;
-        if (k < 0)
-            throw new IllegalArgumentException("k must be >= 0 in |x - y| >= k");
+        this.cofX = cofX;
+        this.cofY = cofY;
+        this.result = result;
+        if (cofX == 0 && cofY == 0)
+            throw new IllegalArgumentException("at least one coefficient must be non-zero");
+        if (cofX < 0 || cofY < 0)
+            throw new IllegalArgumentException("coefficients must be positive");
     }
 
 
@@ -45,11 +51,11 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
     @Override
     public void propagate() {
         if (x.isFixed()) {
-            for (int vx = x.min(); vx <= x.max(); vx++) {
+            for (int vx = x.min()*cofX; vx <= x.max()*cofX; vx++) {
                 if (x.contains(vx)) {
-                    for (int vy = y.min(); vy <= y.max(); vy++) {
+                    for (int vy = y.min()*cofY; vy <= y.max()*cofY; vy++) {
                         if (y.contains(vy)) {
-                            if (Math.abs(vx - vy) < k) {
+                            if (Math.abs(vx*cofX - vy*cofY) < result) {
                                 y.remove(vy);
                             }
                         }
@@ -58,11 +64,11 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
             }
         }
         if (y.isFixed()) {
-            for (int vy = y.min(); vy <= y.max(); vy++) {
+            for (int vy = y.min()*cofY; vy <= y.max()*cofY; vy++) {
                 if (y.contains(vy)) {
-                    for (int vx = x.min(); vx <= x.max(); vx++) {
+                    for (int vx = x.min()*cofX; vx <= x.max()*cofX; vx++) {
                         if (x.contains(vx)) {
-                            if (Math.abs(vx - vy) < k) {
+                            if (Math.abs(vx*cofX - vy*cofY) < result) {
                                 x.remove(vx);
                             }
                         }
@@ -76,22 +82,22 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
     public ArrayList<Integer[]> getForbiddenPairs() {
         ArrayList<Integer[]> pairs = new ArrayList<>();
 
-        for (int vx = x.min(); vx <= x.max(); vx++) {
+        for (int vx = x.min()*cofX; vx <= x.max()*cofX; vx++) {
             if (x.contains(vx)) {
-                for (int vy = y.min(); vy <= y.max(); vy++) {
+                for (int vy = y.min()*cofY; vy <= y.max()*cofY; vy++) {
                     if (y.contains(vy)) {
-                        if (Math.abs(vx - vy) < k) {
+                        if (Math.abs(vx*cofX - vy*cofY) < result) {
                             pairs.add(new Integer[]{vx, vy});
                         }
                     }
                 }
             }
         }
-        for (int vy = y.min(); vy <= y.max(); vy++) {
+        for (int vy = y.min()*cofY; vy <= y.max()*cofY; vy++) {
             if (y.contains(vy)) {
-                for (int vx = x.min(); vx <= x.max(); vx++) {
+                for (int vx = x.min()*cofX; vx <= x.max()*cofX; vx++) {
                     if (x.contains(vx)) {
-                        if (Math.abs(vx - vy) < k) {
+                        if (Math.abs(vx*cofX - vy*cofY) < result) {
                             pairs.add(new Integer[]{vx, vy});
                         }
                     }
