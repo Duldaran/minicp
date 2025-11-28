@@ -6,10 +6,13 @@ import minicp.engine.constraints.AbsoluteAboveEqualVarSub;
 import minicp.engine.constraints.AllDifferentVar;
 import minicp.engine.core.IntVar;
 import minicp.engine.core.Solver;
+import minicp.search.DFSearch;
+import minicp.search.SearchStatistics;
 
 import java.util.ArrayList;
 
 import static minicp.cp.Factory.*;
+import static minicp.cp.BranchingScheme.firstFail;
 
 public class SweepConstraintTest {
     public void testForbiddenRegion() {
@@ -20,8 +23,8 @@ public class SweepConstraintTest {
 
         // Create and post the concrete TwinMod constraint so we can call getForbiddenPairs()
         //TwinMod c = new TwinMod(x, y, 2, 1, 1, 0);
-        //AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, 4);
-        AllDifferentVar c = new AllDifferentVar(x, y);
+        AbsoluteAboveEqualVarSub c = new AbsoluteAboveEqualVarSub(x, y, 4);
+        //AllDifferentVar c = new AllDifferentVar(x, y);
         cp.post(c);
 
         // Use current domains to size the grid
@@ -85,6 +88,30 @@ public class SweepConstraintTest {
             System.out.println();
         }
         System.out.print("   ");
+        System.out.println();
+
+        // ------------------------------------------------------
+        // Search part: enumerate all solutions and collect stats
+        // ------------------------------------------------------
+
+        // Simple first-fail branching on (x, y)
+        DFSearch dfs = makeDfs(cp, firstFail(new IntVar[]{x, y}));
+
+        // Optional: print each solution
+        dfs.onSolution(() -> {
+            System.out.println("Solution found: x=" + x.min() + ", y=" + y.min());
+        });
+
+        // Run the full search and get statistics
+        SearchStatistics stats = dfs.solve();
+
+        // Print statistics
+        System.out.println();
+        System.out.println("Search statistics:");
+        System.out.println("  #solutions = " + stats.numberOfSolutions());
+        System.out.println("  #nodes     = " + stats.numberOfNodes());
+        System.out.println("  #failures  = " + stats.numberOfFailures());
+        System.out.println("  raw stats  = " + stats);
     }
 
     public static void main(String[] args) {
