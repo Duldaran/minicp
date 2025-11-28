@@ -18,6 +18,8 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
     private final int cofX;
     private final int cofY;
     private final int result;
+    
+    private int nbPropagate = 0;
 
     /**
      * Creates the constraint |x - y| >= k
@@ -50,6 +52,7 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
 
     @Override
     public void propagate() {
+        nbPropagate++;
         if (x.isFixed()) {
             for (int vx = x.min(); vx <= x.max(); vx++) {
                 if (x.contains(vx)) {
@@ -78,7 +81,9 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
             this.setActive(false);
         }
     }
-
+    public int getNbPropagate() {
+        return nbPropagate;
+    }
     public ArrayList<Integer[]> getForbiddenPairs() {
         ArrayList<Integer[]> pairs = new ArrayList<>();
 
