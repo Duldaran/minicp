@@ -19,6 +19,7 @@ import static minicp.cp.Factory.*;
 import static minicp.cp.BranchingScheme.firstFail;
 
 public class SweepConstraintExample3 {
+public class SweepConstraintExample3 {
     public void main() {
         Solver cp = Factory.makeSolver();
         
@@ -213,12 +214,15 @@ public class SweepConstraintExample3 {
         filteredX.addAll(newFilteredX);
         filteredY.addAll(newFilteredY);
 
+        int countx = 0;
+        int county = 0;
         System.out.println("Additional values removed after considering all forbidden pairs:");
         System.out.print("x domain: {");
         for (int xv : newFilteredX) {
             System.out.print(xv + " ");
             if (filterSweepLine) {
                 x.remove(xv);
+                countx++;
             }
         }
         System.out.println("}");
@@ -227,9 +231,11 @@ public class SweepConstraintExample3 {
             System.out.print(yv + " ");
             if (filterSweepLine) {
                 y.remove(yv);
+                county++;
             }
         }
         System.out.println("}");
+        System.out.println("count x: " + countx + " count y: " + county);
 
 
         // ------------------------------------------------------
@@ -254,7 +260,16 @@ public class SweepConstraintExample3 {
         System.out.println("  #nodes     = " + stats.numberOfNodes());
         System.out.println("  #failures  = " + stats.numberOfFailures());
         System.out.println("  raw stats  = " + stats);
-    }
 
+        System.out.println();
+        System.out.println("Nb appels à propagate() :");
+        for (AbstractConstraint c : constraints) {
+            System.out.println(c + " : " + c.getNbPropagate());
+        }
+    }
+    
+    public static void main(String[] args) {
+        new SweepConstraintExample3().main();
+    }
 
 }
