@@ -669,7 +669,7 @@ public final class Factory {
     }
 
     public static Constraint absoluteAboveEqualVarSub(IntVar x, IntVar y, int k) {
-        return new AbsoluteAboveEqualVarSub(x, y, k);
+        return new AbsoluteAboveEqualVarSub(x, y, k, k, k);
     }
 
     public static Constraint twinLessOrEqual(IntVar x, IntVar y, int cofX, int cofY, int result) {

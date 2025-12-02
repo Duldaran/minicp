@@ -17,6 +17,7 @@ package minicp.engine.core;
 
 import minicp.state.StateManager;
 
+import java.util.List;
 import java.util.Queue;
 
 /**
@@ -74,5 +75,7 @@ public interface Constraint {
      */
     boolean isActive();
 
-
+    default List<ForbiddenRegion> getForbiddenRegions(){
+        throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
+    }
 }
