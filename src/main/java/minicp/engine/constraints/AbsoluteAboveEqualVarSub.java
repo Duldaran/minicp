@@ -105,25 +105,28 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
 
         return pairs;
     }
-    public List<ForbiddenRegion> getForbiddenRegions() {
+
+    public List<ForbiddenRegion> getForbiddenRegionStart() {
+        int maxX = Math.floorDiv(cofY*y.max() + result, cofX);
+        int minX = Math.ceilDiv(cofY*y.min() - result, cofX);
+
+        ForbiddenRegion region = new ForbiddenRegion(Math.max(minX, x.min()), Math.min(maxX, x.max()), y.min(), y.max());
+        return List.of(region);
+    }
+
+    public List<ForbiddenRegion> getForbiddenRegions(int x) {
         List<ForbiddenRegion> regions = new ArrayList<>();
         
-        int minX = x.min();
-        int maxX = x.max();
         int minY = y.min();
         int maxY = y.max();
-        
-        for (int x = minX; x <= maxX; x++) {
-            int minDisallowedY = Math.ceilDiv(cofX*x - result, cofY);
-            int maxDisallowedY = Math.floorDiv(cofX*x + result, cofY);
-            
+    
+        int minDisallowedY = Math.ceilDiv(cofX*x - result, cofY);
+        int maxDisallowedY = Math.floorDiv(cofX*x + result, cofY);
 
-            int lowerBound = Math.max(minDisallowedY, minY);
-            int upperBound = Math.min(maxDisallowedY, maxY);
-            if (lowerBound <= upperBound) {
-                regions.add(new ForbiddenRegion(x, x, lowerBound, upperBound));
-            }
-            
+        int lowerBound = Math.max(minDisallowedY, minY);
+        int upperBound = Math.min(maxDisallowedY, maxY);
+        if (lowerBound <= upperBound) {
+            regions.add(new ForbiddenRegion(x, x, lowerBound, upperBound));
         }
         
         return regions;

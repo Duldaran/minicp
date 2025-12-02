@@ -69,4 +69,8 @@ public abstract class AbstractConstraint implements Constraint {
     public List<ForbiddenRegion> getForbiddenRegions() {
         throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
     }
+
+    public List<ForbiddenRegion> getForbiddenRegions(int x){
+        throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
+    }
 }

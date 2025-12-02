@@ -78,4 +78,11 @@ public interface Constraint {
     default List<ForbiddenRegion> getForbiddenRegions(){
         throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
     }
+    default List<ForbiddenRegion> getForbiddenRegions(int x){
+        throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
+    }
+
+    default List<ForbiddenRegion> getForbiddenRegionStart(){
+        throw new UnsupportedOperationException("getForbiddenRegionStart not implemented for " + this.getClass().getSimpleName());
+    }
 }

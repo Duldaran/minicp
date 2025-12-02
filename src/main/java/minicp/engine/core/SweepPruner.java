@@ -2,6 +2,7 @@ package minicp.engine.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,29 +23,29 @@ import java.util.TreeSet;
                                        List<Constraint> constraints) {
         Set<Integer> toPrune = new TreeSet<>();
         
-        // Step 1: Collect all forbidden regions from all constraints
-        List<ForbiddenRegion> allRegions = new ArrayList<>();
-        for (Constraint constraint : constraints) {
-            allRegions.addAll(constraint.getForbiddenRegions());
+        List<Event> events = new ArrayList<>();
+        for (Constraint c : constraints) {
+            List<ForbiddenRegion> regionsX = c.getForbiddenRegionStart();
+            for (ForbiddenRegion region : regionsX) {
+                events.add(new Event(region.getInfX(), Type.START, c));
+                events.add(new Event(region.getSupX() + 1, Type.END, c));
+            }
         }
-        
-        
-        Collections.sort(allRegions, (r1, r2) -> Integer.compare(r1.getInfX(), r2.getInfX()));
+        events.sort(Comparator.comparingInt(e -> e.x));
+        int eventIndex = 0;
 
-        
-        // Step 2: Process each X value in domain
-        int regionsIdx = 0;
+        List<Constraint> activeConstraints = new ArrayList<>();
         for (int xVal = x.min(); xVal <= x.max(); xVal++) {
-            IntervalSet status = new IntervalSet();
-            // Update sweep line status: process all events at this x
-            while (regionsIdx < allRegions.size() && allRegions.get(regionsIdx).getInfX() == xVal) {
-                ForbiddenRegion region = allRegions.get(regionsIdx);
-                status.add(region.getInfY(), region.getSupY());
-                regionsIdx++;
+
+            List<Interval> status = new ArrayList<>();
+            for (Constraint c : activeConstraints) {
+                List<ForbiddenRegion> regions = c.getForbiddenRegions(xVal);
+                for (ForbiddenRegion r : regions) {
+                    status.add(new Interval(r.getInfY(), r.getSupY()));
+                }
             }
             
-            // Check if all Y values are covered
-            if (status.fullyCovers(y)) {
+            if (fullyCovers(y, status)) {
                 toPrune.add(xVal);
             } 
         }
@@ -52,79 +53,42 @@ import java.util.TreeSet;
         return toPrune;
     }
     
-    /**
-     * Adjust minimum of X (remove values from left until a valid one is found)
-     */
-    public static boolean adjustMinX(IntVar x, IntVar y,
-                                      List<Constraint> constraints) {
-        Set<Integer> toPrune = new TreeSet<>();
+    private static class Event {
+        int x;
+        Type type;
+        Constraint constraint;
         
-        for (int xVal = x.min(); xVal <= x.max(); xVal++) {
-            // Check if this x has any valid y
-            boolean hasValidY = false;
-            for (int yVal = y.min(); yVal <= y.max(); yVal++) {
-                boolean forbidden = false;
-                for (Constraint c : constraints) {
-                    for (ForbiddenRegion r : c.getForbiddenRegions()) {
-                        if (r.contains(xVal, yVal)) {
-                            forbidden = true;
-                            break;
-                        }
-                    }
-                    if (forbidden) break;
-                }
-                if (!forbidden) {
-                    hasValidY = true;
-                    break;
-                }
-            }
-            
-            if (!hasValidY) {
-                toPrune.add(xVal);
-            } else {
-                break;  // Found first valid X, stop
-            }
+        Event(int x, Type type, Constraint constraint) {
+            this.x = x;
+            this.type = type;
+            this.constraint = constraint;
         }
-        
-        for (int xVal : toPrune) {
-            x.remove(xVal);
+
+        public Constraint getConstraint() {
+            return constraint;
         }
-        
-        return !toPrune.isEmpty();
+    }
+
+    private enum Type {
+        START,
+        END
     }
     
 
-    private static class IntervalSet {
-        private final TreeMap<Integer, Integer> map = new TreeMap<>();
-        private long covered = 0;  // total covered length
-        
-        public void add(int start, int end) {
-            if (start > end) return;
+    private static boolean fullyCovers(IntVar y, List<Interval> segs) {
+        if (segs.isEmpty()) return false;
+        segs.sort((a,b) -> Integer.compare(a.y1, b.y1));
 
-            // find potential merge neighbors
-            Integer left = map.floorKey(start);
-            if (left != null && map.get(left) >= start - 1) {
-                start = Math.min(start, left);
-                end   = Math.max(end, map.get(left));
-                covered -= (map.get(left) - left + 1);
-                map.remove(left);
-            }
-
-            Integer right = map.ceilingKey(start);
-            while (right != null && right <= end + 1) {
-                end = Math.max(end, map.get(right));
-                covered -= (map.get(right) - right + 1);
-                map.remove(right);
-                right = map.ceilingKey(start);
-            }
-
-            // insert merged
-            map.put(start, end);
-            covered += (end - start + 1);
+        int current = y.min();
+        for (Interval s : segs) {
+            if (s.y1 > current) 
+                return false;             
+            current = Math.max(current, s.y2 + 1);
+            if (current > y.max())
+                return true;              
         }
-        
-        public boolean fullyCovers(IntVar y) {
-            return covered >= (y.max() - y.min() + 1);
-        }
+        return current > y.max();
     }
+
+    
 }
