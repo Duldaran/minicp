@@ -17,6 +17,7 @@ package minicp.engine.core;
 
 
 import java.util.ArrayList;
+import java.util.List;
 
 import minicp.state.State;
 
@@ -65,8 +66,8 @@ public abstract class AbstractConstraint implements Constraint {
         return active.value();
     }
 
-    public ArrayList<Integer[]> getForbiddenPairs() {
-        throw new UnsupportedOperationException("getForbiddenPairs not implemented for " + this.getClass().getSimpleName());
+    public List<ForbiddenRegion> getForbiddenRegions() {
+        throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
     }
 
     public int getNbPropagate() {

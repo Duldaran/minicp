@@ -1,10 +1,13 @@
 package minicp.engine.constraints;
 
 import minicp.engine.core.AbstractConstraint;
+import minicp.engine.core.ForbiddenRegion;
 import minicp.engine.core.IntVar;
 import minicp.util.exception.InconsistencyException;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 
 /**
@@ -98,18 +101,102 @@ public class AbsoluteAboveEqualVarSub extends AbstractConstraint {
                 }
             }
         }
-        for (int vy = y.min(); vy <= y.max(); vy++) {
-            if (y.contains(vy)) {
-                for (int vx = x.min(); vx <= x.max(); vx++) {
-                    if (x.contains(vx)) {
-                        if (Math.abs(vx*cofX - vy*cofY) < result) {
-                            pairs.add(new Integer[]{vx, vy});
-                        }
-                    }
-                }
-            }
-        }
+        
 
         return pairs;
+    }
+    public List<ForbiddenRegion> getForbiddenRegions() {
+        List<ForbiddenRegion> regions = new ArrayList<>();
+        
+        int minX = x.min();
+        int maxX = x.max();
+        int minY = y.min();
+        int maxY = y.max();
+        
+        for (int x = minX; x <= maxX; x++) {
+            int minDisallowedY = Math.ceilDiv(cofX*x - result, cofY);
+            int maxDisallowedY = Math.floorDiv(cofX*x + result, cofY);
+            
+
+            int lowerBound = Math.max(minDisallowedY, minY);
+            int upperBound = Math.min(maxDisallowedY, maxY);
+            if (lowerBound <= upperBound) {
+                regions.add(new ForbiddenRegion(x, x, lowerBound, upperBound));
+            }
+            
+        }
+        
+        return regions;
+    }
+    
+    /**
+     * Primitive: Get first forbidden region (ordered by x, then y)
+     */
+    public ForbiddenRegion getFirstForbiddenRegion() {
+        List<ForbiddenRegion> regions = getForbiddenRegions();
+        if (regions.isEmpty()) {
+            return null;
+        }
+        
+        // Sort by infX, then infY
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+                              .thenComparingInt(ForbiddenRegion::getInfY));
+        
+        return regions.get(0);
+    }
+    
+    /**
+     * Primitive: Get next forbidden region after 'previous'
+     */
+    public ForbiddenRegion getNextForbiddenRegion(ForbiddenRegion previous) {
+        List<ForbiddenRegion> regions = getForbiddenRegions();
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+                              .thenComparingInt(ForbiddenRegion::getInfY));
+        
+        int index = regions.indexOf(previous);
+        if (index >= 0 && index + 1 < regions.size()) {
+            return regions.get(index + 1);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Primitive: Get last forbidden region
+     */
+    public ForbiddenRegion getLastForbiddenRegion() {
+        List<ForbiddenRegion> regions = getForbiddenRegions();
+        if (regions.isEmpty()) {
+            return null;
+        }
+        
+        // Sort by infX, then infY
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+                              .thenComparingInt(ForbiddenRegion::getInfY));
+        
+        return regions.get(regions.size() - 1);
+    }
+    
+    /**
+     * Primitive: Get previous forbidden region before 'next'
+     */
+    public ForbiddenRegion getPrevForbiddenRegion(ForbiddenRegion next) {
+        List<ForbiddenRegion> regions = getForbiddenRegions();
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+                              .thenComparingInt(ForbiddenRegion::getInfY));
+        
+        int index = regions.indexOf(next);
+        if (index > 0) {
+            return regions.get(index - 1);
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Primitive: Check if point (x,y) is in any forbidden region
+     */
+    public boolean checkIfInForbiddenRegion(int x, int y) {
+        return Math.abs(x*cofX - y*cofY) < result;
     }
 }

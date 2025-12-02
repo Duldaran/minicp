@@ -19,6 +19,7 @@ import static minicp.cp.Factory.*;
 import static minicp.cp.BranchingScheme.firstFail;
 
 public class SweepConstraintExample3 {
+public class SweepConstraintExample3 {
     public void main() {
         Solver cp = Factory.makeSolver();
         
@@ -34,7 +35,7 @@ public class SweepConstraintExample3 {
         int minY = y.min();
         int maxY = y.max();
 
-        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y,  1, 1, 50);
+        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y,1,1, 50);
         TwinLessOrEqual C = new TwinLessOrEqual(x, y, 1, 1, 200);
         TwinMoreOrEqual D = new TwinMoreOrEqual(x, y, -1, 2, -1);
         TwinMoreOrEqual D2 = new TwinMoreOrEqual(x, y, 2, -1, -1);
