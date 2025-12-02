@@ -36,7 +36,15 @@ import java.util.TreeSet;
 
         List<Constraint> activeConstraints = new ArrayList<>();
         for (int xVal = x.min(); xVal <= x.max(); xVal++) {
-
+            while (eventIndex < events.size() && events.get(eventIndex).x == xVal) {
+                Event e = events.get(eventIndex);
+                if (e.type == Type.START) {
+                    activeConstraints.add(e.getConstraint());
+                } else {
+                    activeConstraints.remove(e.getConstraint());
+                }
+                eventIndex++;
+            }
             List<Interval> status = new ArrayList<>();
             for (Constraint c : activeConstraints) {
                 List<ForbiddenRegion> regions = c.getForbiddenRegions(xVal);
