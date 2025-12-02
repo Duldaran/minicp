@@ -68,4 +68,8 @@ public abstract class AbstractConstraint implements Constraint {
     public ArrayList<Integer[]> getForbiddenPairs() {
         throw new UnsupportedOperationException("getForbiddenPairs not implemented for " + this.getClass().getSimpleName());
     }
+
+    public int getNbPropagate() {
+        throw new UnsupportedOperationException("getNbPropagate not implemented for " + this.getClass().getSimpleName());
+    }
 }

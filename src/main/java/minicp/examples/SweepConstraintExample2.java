@@ -50,7 +50,7 @@ public class SweepConstraintExample2 {
         // Store filtered values in data structures
         ArrayList<Integer> filteredX = new ArrayList<>();
         ArrayList<Integer> filteredY = new ArrayList<>();
-        
+
         System.out.println("\nValues removed after constraint propagation:");
         System.out.print("x domain: {");
         for (int v = minX; v <= maxX; v++) {
@@ -214,12 +214,15 @@ public class SweepConstraintExample2 {
         filteredX.addAll(newFilteredX);
         filteredY.addAll(newFilteredY);
 
+        int countx = 0;
+        int county = 0;
         System.out.println("Additional values removed after considering all forbidden pairs:");
         System.out.print("x domain: {");
         for (int xv : newFilteredX) {
             System.out.print(xv + " ");
             if (filterSweepLine) {
                 x.remove(xv);
+                countx++;
             }
         }
         System.out.println("}");
@@ -228,10 +231,11 @@ public class SweepConstraintExample2 {
             System.out.print(yv + " ");
             if (filterSweepLine) {
                 y.remove(yv);
+                county++;
             }
         }
         System.out.println("}");
-
+        System.out.println("count x: " + countx + " count y: " + county);
 
         // ------------------------------------------------------
         // Search part: enumerate all solutions and collect stats
@@ -255,7 +259,13 @@ public class SweepConstraintExample2 {
         System.out.println("  #nodes     = " + stats.numberOfNodes());
         System.out.println("  #failures  = " + stats.numberOfFailures());
         System.out.println("  raw stats  = " + stats);
-    }
+        
+        System.out.println();
+        System.out.println("Nb appels à propagate() :");
+        for (AbstractConstraint c : constraints) {
+            System.out.println(c + " : " + c.getNbPropagate());
+        }
 
+    }
 
 }

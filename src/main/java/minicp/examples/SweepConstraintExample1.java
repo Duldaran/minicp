@@ -212,21 +212,20 @@ public class SweepConstraintExample1 {
 
         filteredX.addAll(newFilteredX);
         filteredY.addAll(newFilteredY);
-
         System.out.println("Additional values removed after considering all forbidden pairs:");
         System.out.print("x domain: {");
         for (int xv : newFilteredX) {
-            System.out.print(xv + " ");
             if (filterSweepLine) {
                 x.remove(xv);
+                System.out.print(xv + " ");
             }
         }
         System.out.println("}");
         System.out.print("y domain: {");
         for (int yv : newFilteredY) {
-            System.out.print(yv + " ");
             if (filterSweepLine) {
                 y.remove(yv);
+                System.out.print(yv + " ");
             }
         }
         System.out.println("}");

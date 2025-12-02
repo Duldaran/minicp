@@ -17,6 +17,7 @@ public class AbsoluteBelowEqualVarSub extends AbstractConstraint {
     private final int cofX;
     private final int cofY;
     private final int result;
+    private int nbPropagate = 0;
 
     /**
      * Creates the constraint |x - y| <= k.
@@ -50,6 +51,7 @@ public class AbsoluteBelowEqualVarSub extends AbstractConstraint {
 
     @Override
     public void propagate() {
+        nbPropagate++;
         if (x.isFixed()) {
             for (int vx = x.min()*cofX; vx <= x.max()*cofX; vx++) {
                 if (x.contains(vx)) {
@@ -105,5 +107,8 @@ public class AbsoluteBelowEqualVarSub extends AbstractConstraint {
         }
 
         return pairs;
+    }
+    public int getNbPropagate() {
+        return nbPropagate;
     }
 }

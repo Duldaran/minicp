@@ -18,15 +18,15 @@ import java.util.Arrays;
 import static minicp.cp.Factory.*;
 import static minicp.cp.BranchingScheme.firstFail;
 
-public class SweepConstraintExample3 {
+public class SweepConstraintExample3D {
     public void main() {
         Solver cp = Factory.makeSolver();
         
         final boolean printForbidden = false;
         final boolean filterSweepLine = false;
 
-        IntVar x = makeIntVar(cp, 0, 200);
-        IntVar y = makeIntVar(cp, 0, 200);
+        IntVar x = makeIntVar(cp, 0, 20);
+        IntVar y = makeIntVar(cp, 0, 20);
 
         // Use initial domains to size the grid
         int minX = x.min();
@@ -34,14 +34,15 @@ public class SweepConstraintExample3 {
         int minY = y.min();
         int maxY = y.max();
 
-        AbsoluteAboveEqualVarSub B = new AbsoluteAboveEqualVarSub(x, y,  1, 1, 50);
-        TwinLessOrEqual C = new TwinLessOrEqual(x, y, 1, 1, 200);
-        TwinMoreOrEqual D = new TwinMoreOrEqual(x, y, -1, 2, -1);
-        TwinMoreOrEqual D2 = new TwinMoreOrEqual(x, y, 2, -1, -1);
-        TwinMoreOrEqual D3 = new TwinMoreOrEqual(x, y, 3, 4, 500);
-        TwinMod E = new TwinMod(x, y, 3, 1, 2, 2);
+       
+        TwinMoreOrEqual D2 = new TwinMoreOrEqual(x, y, -1, 1, -1);
+        TwinMoreOrEqual D3 = new TwinMoreOrEqual(x, y, 1, -1, -1);
+        TwinMoreOrEqual D = new TwinMoreOrEqual(x, y, 1, 3, 20);
+        TwinMod E = new TwinMod(x, y, 3, 2, 1, 2);
+        TwinLessOrEqual C = new TwinLessOrEqual(x, y, 1, 1, 21);
 
-        ArrayList<AbstractConstraint> constraints = new ArrayList<>(Arrays.asList( B, C, E, D3, D2, D));
+        ArrayList<AbstractConstraint> constraints = new ArrayList<>(Arrays.asList(D, D2, D3, E, C));
+        // Filter the domains by propagating all constraints
         for (AbstractConstraint c : constraints) {
             cp.post(c);
         }
@@ -213,15 +214,12 @@ public class SweepConstraintExample3 {
         filteredX.addAll(newFilteredX);
         filteredY.addAll(newFilteredY);
 
-        int countx = 0;
-        int county = 0;
         System.out.println("Additional values removed after considering all forbidden pairs:");
         System.out.print("x domain: {");
         for (int xv : newFilteredX) {
             System.out.print(xv + " ");
             if (filterSweepLine) {
                 x.remove(xv);
-                countx++;
             }
         }
         System.out.println("}");
@@ -230,11 +228,9 @@ public class SweepConstraintExample3 {
             System.out.print(yv + " ");
             if (filterSweepLine) {
                 y.remove(yv);
-                county++;
             }
         }
         System.out.println("}");
-        System.out.println("count x: " + countx + " count y: " + county);
 
 
         // ------------------------------------------------------
@@ -259,16 +255,13 @@ public class SweepConstraintExample3 {
         System.out.println("  #nodes     = " + stats.numberOfNodes());
         System.out.println("  #failures  = " + stats.numberOfFailures());
         System.out.println("  raw stats  = " + stats);
-
+        
         System.out.println();
         System.out.println("Nb appels à propagate() :");
         for (AbstractConstraint c : constraints) {
             System.out.println(c + " : " + c.getNbPropagate());
         }
-    }
-    
-    public static void main(String[] args) {
-        new SweepConstraintExample3().main();
+
     }
 
 }

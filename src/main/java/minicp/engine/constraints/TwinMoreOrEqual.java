@@ -19,7 +19,7 @@ public class TwinMoreOrEqual extends AbstractConstraint {
     private final int cofX;
     private final int cofY;
     private final int result;
-
+    private int nbPropagate = 0;
     public TwinMoreOrEqual(IntVar x, IntVar y, int cofX, int cofY, int result) {
         super(x.getSolver());
         this.x = x;
@@ -41,6 +41,7 @@ public class TwinMoreOrEqual extends AbstractConstraint {
 
     @Override
     public void propagate() {
+        nbPropagate++;
         if(cofX > 0 && cofY > 0) {
             x.removeBelow(Math.ceilDiv(result - cofY * y.max(), cofX));
             y.removeBelow(Math.ceilDiv(result - cofX * x.max(), cofY));
@@ -75,5 +76,8 @@ public class TwinMoreOrEqual extends AbstractConstraint {
             }
         }
         return pairs;
+    }
+    public int getNbPropagate() {
+        return nbPropagate;
     }
 }
