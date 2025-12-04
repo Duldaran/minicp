@@ -18,12 +18,11 @@ import java.util.Arrays;
 import static minicp.cp.Factory.*;
 import static minicp.cp.BranchingScheme.firstFail;
 
-public class SweepConstraintExample3D {
+public class SweepConstraintExample2_naive {
     public void main() {
         Solver cp = Factory.makeSolver();
         
         final boolean printForbidden = false;
-        final boolean filterSweepLine = false;
 
         IntVar x = makeIntVar(cp, 0, 20);
         IntVar y = makeIntVar(cp, 0, 20);
@@ -34,7 +33,6 @@ public class SweepConstraintExample3D {
         int minY = y.min();
         int maxY = y.max();
 
-       
         TwinMoreOrEqual D2 = new TwinMoreOrEqual(x, y, -1, 1, -1);
         TwinMoreOrEqual D3 = new TwinMoreOrEqual(x, y, 1, -1, -1);
         TwinMoreOrEqual D = new TwinMoreOrEqual(x, y, 1, 3, 20);
@@ -50,26 +48,18 @@ public class SweepConstraintExample3D {
         // Store filtered values in data structures
         ArrayList<Integer> filteredX = new ArrayList<>();
         ArrayList<Integer> filteredY = new ArrayList<>();
-        
-        System.out.println("\nValues removed after constraint propagation:");
-        System.out.print("x domain: {");
+
         for (int v = minX; v <= maxX; v++) {
             if (!x.contains(v)) {
             filteredX.add(v);
-            System.out.print(v + " ");
             }
         }
-        System.out.println("}");
         
-        System.out.print("y domain: {");
         for (int v = minY; v <= maxY; v++) {
             if (!y.contains(v)) {
             filteredY.add(v);
-            System.out.print(v + " ");
             }
         }
-        System.out.println("}");
-        System.out.println();
 
         int min = Math.min(minX, minY);
         int max = Math.max(maxX, maxY);
@@ -106,38 +96,6 @@ public class SweepConstraintExample3D {
                         temp_allowed[xv - min][yv - min] = false;
                     }
                 }
-
-                // Print header
-                System.out.println("   ");
-                System.out.println("Allowed region for constraint(x, y)");
-                System.out.println("O = allowed (solution), X = forbidden (no solution)");
-                System.out.println();
-
-                // y-axis labels
-                System.out.print("    y=");
-                for (int yv = min; yv <= max; yv++) {
-                    System.out.print(" " + yv);
-                }
-                System.out.println();
-
-                // separator line
-                System.out.print("   ");
-                for (int i = 0; i < 2 * n + 1; i++) {
-                    System.out.print("-");
-                }
-                System.out.println();
-
-                // Print grid: rows = x, columns = y
-                for (int xv = min; xv <= max; xv++) {
-                    System.out.print("x=" + xv + " | ");
-                    for (int yv = min; yv <= max; yv++) {
-                        char cPlot = temp_allowed[xv - min][yv - min] ? 'O' : 'X';
-                        System.out.print(cPlot + " ");
-                    }
-                    System.out.println();
-                }
-                System.out.print("   ");
-                System.out.println();
             }
             for (Integer[] pair : forbiddenPairs) {
                 int xv = pair[0];
@@ -214,24 +172,14 @@ public class SweepConstraintExample3D {
         filteredX.addAll(newFilteredX);
         filteredY.addAll(newFilteredY);
 
-        System.out.println("Additional values removed after considering all forbidden pairs:");
-        System.out.print("x domain: {");
         for (int xv : newFilteredX) {
             System.out.print(xv + " ");
-            if (filterSweepLine) {
-                x.remove(xv);
-            }
+            x.remove(xv);
         }
-        System.out.println("}");
-        System.out.print("y domain: {");
         for (int yv : newFilteredY) {
             System.out.print(yv + " ");
-            if (filterSweepLine) {
-                y.remove(yv);
-            }
+            y.remove(yv);
         }
-        System.out.println("}");
-
 
         // ------------------------------------------------------
         // Search part: enumerate all solutions and collect stats
@@ -240,13 +188,10 @@ public class SweepConstraintExample3D {
         // Simple first-fail branching on (x, y)
         DFSearch dfs = makeDfs(cp, firstFail(new IntVar[]{x, y}));
 
-        // Optional: print each solution
-        dfs.onSolution(() -> {
-            //System.out.println("Solution found: x=" + x.min() + ", y=" + y.min());
-        });
-
-        // Run the full search and get statistics
+        long start = System.nanoTime();
         SearchStatistics stats = dfs.solve();
+        long end = System.nanoTime();
+        double millis = (end - start) / 1_000_000.0;
 
         // Print statistics
         System.out.println();
@@ -255,7 +200,8 @@ public class SweepConstraintExample3D {
         System.out.println("  #nodes     = " + stats.numberOfNodes());
         System.out.println("  #failures  = " + stats.numberOfFailures());
         System.out.println("  raw stats  = " + stats);
-        
+        System.out.printf("Temps d'exécution de la recherche : %.3f ms%n", millis);
+
         System.out.println();
         System.out.println("Nb appels à propagate() :");
         for (AbstractConstraint c : constraints) {
@@ -263,5 +209,16 @@ public class SweepConstraintExample3D {
         }
 
     }
+    public static void main(String[] args) {
+        long start = System.nanoTime();
+
+        new SweepConstraintExample2_naive().main();
+
+        long end = System.nanoTime();
+        double millis = (end - start) / 1_000_000.0;
+
+        System.out.printf("Temps d'exécution total : %.3f ms%n", millis);
+    }
+
 
 }

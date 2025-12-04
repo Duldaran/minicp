@@ -10,9 +10,11 @@ import minicp.util.exception.InconsistencyException;
 
 import static minicp.cp.Factory.*;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TwinMod
@@ -25,7 +27,9 @@ public class TwinMod extends AbstractConstraint {
     private final int cofX;
     private final int cofY;
     private final int result;
+
     private int nbPropagate = 0;
+    private List<ForbiddenRegion> regions = new ArrayList<>();  
 
     public TwinMod(IntVar x, IntVar y, int mod, int cofX, int cofY, int result) {
         super(x.getSolver());
@@ -43,6 +47,7 @@ public class TwinMod extends AbstractConstraint {
             throw new IllegalArgumentException("at least one coefficient must be non-zero");
         if (result < 0 || result >= mod)
             throw new IllegalArgumentException("result must be in [0," + (mod - 1) + "]");
+        this.regions = computeForbiddenRegions();
     }
 
     @Override
@@ -110,17 +115,20 @@ public class TwinMod extends AbstractConstraint {
         }
         return pairs;
     }
+
     public int getNbPropagate() {
         return nbPropagate;
     }
     public List<ForbiddenRegion> getForbiddenRegions() {
+        return regions;
+    }
+
+    public List<ForbiddenRegion> computeForbiddenRegions() {
         List<ForbiddenRegion> regions = new ArrayList<>();
-        
         int minX = x.min();
         int maxX = x.max();
         int minY = y.min();
         int maxY = y.max();
-        
 
         for (int xVal = minX; xVal <= maxX; xVal++) {
             if (!x.contains(xVal)) continue;
@@ -140,36 +148,42 @@ public class TwinMod extends AbstractConstraint {
                 } else {
                     // This y is allowed, close any open range
                     if (rangeStart != null) {
-                        regions.add(new ForbiddenRegion(xVal, xVal, rangeStart, rangeEnd));
+                        regions.add(new ForbiddenRegion(xVal, rangeStart, rangeEnd));
                         rangeStart = null;
                         rangeEnd = null;
                     }
                 }
             }
-            
             // Close any remaining open range
             if (rangeStart != null) {
-                regions.add(new ForbiddenRegion(xVal, xVal, rangeStart, rangeEnd));
+                regions.add(new ForbiddenRegion(xVal, rangeStart, rangeEnd));
             }
         }
-        
         return regions;
     }
     
     /**
      * Primitive: Get first forbidden region (ordered by x, then y)
      */
-    public ForbiddenRegion getFirstForbiddenRegion() {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
+    public Map.Entry<Integer, List<ForbiddenRegion>> getFirstForbiddenRegions(){        
         if (regions.isEmpty()) {
             return null;
         }
-        
         // Sort by infX, then infY
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getEventPoint)
                               .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        return regions.get(0);
+
+        int starting_idx = regions.get(0).getEventPoint();
+        List<ForbiddenRegion> startingRegions = new ArrayList<>();
+        for (ForbiddenRegion r : regions) {
+            if (r.getEventPoint() == starting_idx) {
+                startingRegions.add(r);
+            }
+            else {
+                break;
+            }
+        }
+        return new AbstractMap.SimpleEntry<>(starting_idx, startingRegions);
     }
     
     /**

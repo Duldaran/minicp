@@ -18,6 +18,7 @@ package minicp.engine.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import minicp.state.State;
 
@@ -65,13 +66,17 @@ public abstract class AbstractConstraint implements Constraint {
     public boolean isActive() {
         return active.value();
     }
+    
+    public ArrayList<Integer[]> getForbiddenPairs() {
+        throw new UnsupportedOperationException("getForbiddenPairs not implemented for " + this.getClass().getSimpleName());
+    }
 
     public List<ForbiddenRegion> getForbiddenRegions() {
         throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
     }
 
-    public List<ForbiddenRegion> getForbiddenRegions(int x){
-        throw new UnsupportedOperationException("getForbiddenRegions not implemented for " + this.getClass().getSimpleName());
+    public Map.Entry<Integer, List<ForbiddenRegion>> getFirstForbiddenRegions(){
+        throw new UnsupportedOperationException("getFirstForbiddenRegions not implemented for " + this.getClass().getSimpleName());
     }
 
     public int getNbPropagate() {

@@ -8,9 +8,11 @@ import minicp.util.exception.InconsistencyException;
 
 import static minicp.cp.Factory.*;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TwinLessOrEqual
@@ -24,6 +26,7 @@ public class TwinLessOrEqual extends AbstractConstraint {
     private final int result;
 
     private int nbPropagate = 0;
+    private List<ForbiddenRegion> regions = new ArrayList<>();
 
     public TwinLessOrEqual(IntVar x, IntVar y, int cofX, int cofY, int result) {
         super(x.getSolver());
@@ -34,6 +37,7 @@ public class TwinLessOrEqual extends AbstractConstraint {
         this.result = result;
         if (cofX == 0 && cofY == 0)
             throw new IllegalArgumentException("at least one coefficient must be non-zero");
+        this.regions = computeForbiddenRegions();
     }
 
     @Override
@@ -78,45 +82,56 @@ public class TwinLessOrEqual extends AbstractConstraint {
         }
         return pairs;
     }
+
     public int getNbPropagate() {
         return nbPropagate;
     }
-
     public List<ForbiddenRegion> getForbiddenRegions() {
+        return regions;
+    }
+    
+    public List<ForbiddenRegion> computeForbiddenRegions() {
         List<ForbiddenRegion> regions = new ArrayList<>();
         
-        int minX = x.min();
-        int maxX = x.max();
         int minY = y.min();
         int maxY = y.max();
         
         // For each x value, determine which y values violate X + Y = 2
         for(int vx = x.min(); vx <= x.max(); vx++){
-            int validY = Math.floorDiv(result - cofX * vx, cofY);  // The only y value that satisfies x + y = 2
-            
-            // Create forbidden region for y < validY
-            if (maxY > validY) {
-                regions.add(new ForbiddenRegion(vx, vx,  Math.max(validY + 1, minY), maxY));
+            if (x.contains(vx)) {
+                int validY = Math.floorDiv(result - cofX * vx, cofY);  // The only y value that satisfies x + y = 2
+                
+                // Create forbidden region for y < validY
+                if (maxY > validY) {
+                    regions.add(new ForbiddenRegion(vx, Math.max(validY + 1, minY), maxY));
+                }
             }
         }
-        
         return regions;
     }
     
     /**
      * Primitive: Get first forbidden region (ordered by x, then y)
      */
-    public ForbiddenRegion getFirstForbiddenRegion() {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
+    public Map.Entry<Integer, List<ForbiddenRegion>> getFirstForbiddenRegions(){        
         if (regions.isEmpty()) {
             return null;
         }
-        
         // Sort by infX, then infY
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getEventPoint)
                               .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        return regions.get(0);
+
+        int starting_idx = regions.get(0).getEventPoint();
+        List<ForbiddenRegion> startingRegions = new ArrayList<>();
+        for (ForbiddenRegion r : regions) {
+            if (r.getEventPoint() == starting_idx) {
+                startingRegions.add(r);
+            }
+            else {
+                break;
+            }
+        }
+        return new AbstractMap.SimpleEntry<>(starting_idx, startingRegions);
     }
     
     /**

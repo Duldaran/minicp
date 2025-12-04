@@ -1,8 +1,10 @@
 package minicp.engine.constraints;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import minicp.engine.core.AbstractConstraint;
 import minicp.engine.core.ForbiddenRegion;
@@ -14,11 +16,13 @@ public class AllDifferentVar extends AbstractConstraint {
     private final IntVar y;
 
     private int nbPropagate = 0;
+    private List<ForbiddenRegion> regions = new ArrayList<>();
 
     public AllDifferentVar(IntVar x, IntVar y) {
         super(x.getSolver());
         this.x = x;
         this.y = y;
+        this.regions = computeForbiddenRegions();
     }
 
     @Override
@@ -65,12 +69,13 @@ public class AllDifferentVar extends AbstractConstraint {
     public int getNbPropagate() {
         return nbPropagate;
     }
-
     public List<ForbiddenRegion> getForbiddenRegions() {
+        return regions;
+    }
+
+    public List<ForbiddenRegion> computeForbiddenRegions() {
         List<ForbiddenRegion> regions = new ArrayList<>();
         
-        int minX = x.min();
-        int maxX = x.max();
         int minY = y.min();
         int maxY = y.max();
         
@@ -79,7 +84,7 @@ public class AllDifferentVar extends AbstractConstraint {
 
             int invalidYInt = (int) invalidY;
             if (maxY >= invalidYInt && invalidYInt >= minY) {
-                regions.add(new ForbiddenRegion(vx, vx,  invalidYInt , invalidYInt));
+                regions.add(new ForbiddenRegion(vx, invalidYInt, invalidYInt));
             }
         }
         
@@ -87,19 +92,27 @@ public class AllDifferentVar extends AbstractConstraint {
     }
     
     /**
-     * Primitive: Get first forbidden region (ordered by x, then y)
+     * Primitive: Get first forbidden region 
      */
-    public ForbiddenRegion getFirstForbiddenRegion() {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
+    public Map.Entry<Integer, List<ForbiddenRegion>> getFirstForbiddenRegions(){        
         if (regions.isEmpty()) {
             return null;
         }
-        
         // Sort by infX, then infY
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
+        regions.sort(Comparator.comparingInt(ForbiddenRegion::getEventPoint)
                               .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        return regions.get(0);
+
+        int starting_idx = regions.get(0).getEventPoint();
+        List<ForbiddenRegion> startingRegions = new ArrayList<>();
+        for (ForbiddenRegion r : regions) {
+            if (r.getEventPoint() == starting_idx) {
+                startingRegions.add(r);
+            }
+            else {
+                break;
+            }
+        }
+        return new AbstractMap.SimpleEntry<>(starting_idx, startingRegions);
     }
     
     /**

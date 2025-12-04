@@ -22,7 +22,10 @@ public class TwinMoreOrEqual extends AbstractConstraint {
     private final int cofX;
     private final int cofY;
     private final int result;
+
     private int nbPropagate = 0;
+    private List<ForbiddenRegion> regions = new ArrayList<>();
+
     public TwinMoreOrEqual(IntVar x, IntVar y, int cofX, int cofY, int result) {
         super(x.getSolver());
         this.x = x;
@@ -32,6 +35,7 @@ public class TwinMoreOrEqual extends AbstractConstraint {
         this.result = result;
         if (cofX == 0 && cofY == 0)
             throw new IllegalArgumentException("at least one coefficient must be non-zero");
+        this.regions = computeForbiddenRegions();
     }
 
     @Override
@@ -82,95 +86,69 @@ public class TwinMoreOrEqual extends AbstractConstraint {
     }
 
 
-    public List<ForbiddenRegion> getForbiddenRegions() {
+    public List<ForbiddenRegion> computeForbiddenRegions() {
+
         List<ForbiddenRegion> regions = new ArrayList<>();
-        
-        int minX = x.min();
-        int maxX = x.max();
-        int minY = y.min();
-        int maxY = y.max();
-        
-        // For each x value, determine which y values violate X + Y = 2
-        for(int vx = x.min(); vx <= x.max(); vx++){
-            int validY = Math.ceilDiv(result - cofX * vx, cofY);  // The only y value that satisfies x + y = 2
-            
-            // Create forbidden region for y < validY
-            if (minY < validY) {
-                regions.add(new ForbiddenRegion(vx, vx, minY, Math.min(validY - 1, maxY)));
+        int yMin = y.min();
+        int yMax = y.max();
+
+        for (int xVal = x.min(); xVal <= x.max(); xVal++) {
+            if (!x.contains(xVal)) continue;
+
+            if (cofY > 0) {
+                int num = result - cofX * xVal;
+                int yMinAllowed = ceilDiv(num, cofY); // smallest y that satisfies
+
+                int forbiddenLow = yMin;
+                int forbiddenHigh = yMinAllowed - 1;
+
+                if (forbiddenLow <= forbiddenHigh) {
+                    // Intersect with current y-domain
+                    forbiddenLow  = Math.max(forbiddenLow, yMin);
+                    forbiddenHigh = Math.min(forbiddenHigh, yMax);
+                    if (forbiddenLow <= forbiddenHigh) {
+                        regions.add(new ForbiddenRegion(xVal, forbiddenLow, forbiddenHigh));
+                    }
+                }
+            }
+            else if (cofY < 0) {
+                int num = result - cofX * xVal;
+                int yMaxAllowed = Math.floorDiv(num, cofY); // largest y that satisfies
+
+                int forbiddenLow = yMaxAllowed + 1;
+                int forbiddenHigh = yMax;
+
+                if (forbiddenLow <= forbiddenHigh) {
+                    forbiddenLow  = Math.max(forbiddenLow, yMin);
+                    forbiddenHigh = Math.min(forbiddenHigh, yMax);
+                    if (forbiddenLow <= forbiddenHigh) {
+                        regions.add(new ForbiddenRegion(xVal, forbiddenLow, forbiddenHigh));
+                    }
+                }
+            }
+            else { // cofY == 0
+                if (cofX * xVal < result) {
+                    // whole column is forbidden
+                    regions.add(new ForbiddenRegion(xVal, yMin, yMax));
+                }
+                // else: all y allowed for that x → no region
             }
         }
-        
+
         return regions;
     }
-    
-    /**
-     * Primitive: Get first forbidden region (ordered by x, then y)
-     */
-    public ForbiddenRegion getFirstForbiddenRegion() {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
-        if (regions.isEmpty()) {
-            return null;
-        }
-        
-        // Sort by infX, then infY
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
-                              .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        return regions.get(0);
+
+    // helper:
+    static int ceilDiv(int num, int den) {
+        return -Math.floorDiv(-num, den);
     }
+
     
-    /**
-     * Primitive: Get next forbidden region after 'previous'
-     */
-    public ForbiddenRegion getNextForbiddenRegion(ForbiddenRegion previous) {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
-                              .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        int index = regions.indexOf(previous);
-        if (index >= 0 && index + 1 < regions.size()) {
-            return regions.get(index + 1);
-        }
-        
-        return null;
+
+    public int getNbPropagate() {
+        return nbPropagate;
     }
-    
-    /**
-     * Primitive: Get last forbidden region
-     */
-    public ForbiddenRegion getLastForbiddenRegion() {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
-        if (regions.isEmpty()) {
-            return null;
-        }
-        
-        // Sort by infX, then infY
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
-                              .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        return regions.get(regions.size() - 1);
-    }
-    
-    /**
-     * Primitive: Get previous forbidden region before 'next'
-     */
-    public ForbiddenRegion getPrevForbiddenRegion(ForbiddenRegion next) {
-        List<ForbiddenRegion> regions = getForbiddenRegions();
-        regions.sort(Comparator.comparingInt(ForbiddenRegion::getInfX)
-                              .thenComparingInt(ForbiddenRegion::getInfY));
-        
-        int index = regions.indexOf(next);
-        if (index > 0) {
-            return regions.get(index - 1);
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Primitive: Check if point (x,y) is in any forbidden region
-     */
-    public boolean checkIfInForbiddenRegion(int x, int y) {
-        return (cofX * x + cofY * y) < result;
+    public List<ForbiddenRegion> getForbiddenRegions() {
+        return regions;
     }
 }
